@@ -1,0 +1,113 @@
+import Card from "./Card";
+import Form from "./Form";
+
+export default class Container {
+  constructor() {
+    this.columns = document.querySelectorAll(".column");
+    this.init();
+  }
+
+  // Инициализация
+  init() {
+    this.columns.forEach((column) => {
+      // Разрешаем перетаскивание над колонкой
+      column.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move"; //эффект перемещения
+
+        const cardDragged = document.querySelector(".dragging");
+        const afterElement = this.getDragAfterElement(column, event.clientY);
+
+        // Если afterElement равен null, вставляем карточку перед кнопкой "Add task"
+        if (afterElement == null) {
+          const addTaskBtn = column.querySelector(".add-task");
+          column.insertBefore(cardDragged, addTaskBtn);
+        } else {
+          // Вставляем карточку перед afterElement
+          column.insertBefore(cardDragged, afterElement);
+        }
+      });
+
+      // событие броска карточки в колонку
+      column.addEventListener("drop", (event) => {
+        event.preventDefault();
+        const text = event.dataTransfer.getData("text/plain");
+
+        // Находим оригинальную карточку и удаляем её
+        const originalCard = Array.from(this.columns)
+          .flatMap((column) => Array.from(column.querySelectorAll(".task")))
+          .find((card) => card.querySelector("span").textContent === text);
+
+        if (originalCard) {
+          originalCard.remove();
+        }
+
+        // Создаем новую карточку и вставляем ее перед кнопкой
+        const card = new Card(text, column.dataset.columnId);
+        column.insertBefore(
+          card.cardElement,
+          column.querySelector(".add-task"),
+        );
+
+        this.saveCardPosition(card);
+      });
+
+      // Кнопка "Add task"
+      const addBtn = column.querySelector(".add-task");
+      addBtn.addEventListener("click", () => {
+        addBtn.style.display = "none";
+        new Form(column);
+      });
+
+      // Загрузка карточек из localStorage
+      this.loadCards(column);
+    });
+  }
+
+  // Загрузка карточек из localStorage
+  loadCards(column) {
+    const columnId = column.dataset.columnId;
+    const cards = JSON.parse(localStorage.getItem("cards")) || [];
+    cards
+      .filter((card) => card.columnId === columnId)
+      .forEach((cardData) => {
+        const card = new Card(cardData.text, cardData.columnId);
+        column.insertBefore(
+          card.cardElement,
+          column.querySelector(".add-task"),
+        );
+      });
+  }
+
+  // Сохранение позиции карточки в localStorage
+  saveCardPosition(card) {
+    const cards = JSON.parse(localStorage.getItem("cards")) || [];
+    const cardIndex = cards.findIndex((c) => c.text === card.text);
+
+    if (cardIndex !== -1) {
+      cards[cardIndex].columnId = card.columnId; // Обновляем колонку
+    } else {
+      cards.push({ text: card.text, columnId: card.columnId }); // Добавляем новую карточку
+    }
+
+    localStorage.setItem("cards", JSON.stringify(cards));
+  }
+
+  // Определение позиции для вставки карточки
+  getDragAfterElement(column, y) {
+    const draggableElements = [
+      ...column.querySelectorAll(".task:not(.dragging)"),
+    ];
+
+    draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+
+      if (offset < 0 && (closest === null || offset > closest.offset)) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, null);
+  }
+}
