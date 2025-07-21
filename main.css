@@ -31,15 +31,25 @@ h2 {
 }
 
 .task {
+    box-sizing: border-box;
+    max-width: 100%;
     position: relative;
     background-color: white;
     border-radius: 5px;
     padding: 10px;
     margin: 10px 0;
     white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
     z-index: 1;
     cursor: grab;
     transition: opacity 0.3s;
+}
+
+.task span {
+    display: inline-block;
+    width: calc(100% - 25px);
+    word-break: break-word;
 }
 
 .task.dragging {
