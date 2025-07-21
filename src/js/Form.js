@@ -19,6 +19,8 @@ export default class Form {
                 <button class="close">✖</button>
             </div>
         `;
+    setTimeout(() => form.querySelector(".task-text").focus(), 0);
+
     return form;
   }
 
@@ -29,11 +31,16 @@ export default class Form {
 
       if (text) {
         const card = new Card(text);
-        this.column.insertBefore(card.cardElement, this.formElement);
+
+        const addTaskBtn = this.column.querySelector(".add-task");
+        this.column.insertBefore(card.cardElement, addTaskBtn);
 
         this.saveToLocalStorage(text, this.columnId);
 
         this.formElement.querySelector(".task-text").value = "";
+
+        this.column.removeChild(this.formElement);
+        addTaskBtn.style.display = "block";
       }
     });
 
