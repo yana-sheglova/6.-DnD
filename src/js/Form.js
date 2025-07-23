@@ -5,7 +5,7 @@ export default class Form {
     this.column = column;
     this.columnId = this.column.dataset.columnId;
     this.formElement = this.createForm();
-    this.column.appendChild(this.formElement);
+    this.column.append(this.formElement);
     this.bindEvents();
   }
 
@@ -39,13 +39,13 @@ export default class Form {
 
         this.formElement.querySelector(".task-text").value = "";
 
-        this.column.removeChild(this.formElement);
+        this.formElement.remove();
         addTaskBtn.style.display = "block";
       }
     });
 
     this.formElement.querySelector(".close").addEventListener("click", () => {
-      this.column.removeChild(this.formElement);
+      this.formElement.remove();
       this.column.querySelector(".add-task").style.display = "block";
     });
   }

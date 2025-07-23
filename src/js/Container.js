@@ -16,15 +16,15 @@ export default class Container {
         event.dataTransfer.dropEffect = "move"; //эффект перемещения
 
         const cardDragged = document.querySelector(".dragging");
-        const afterElement = this.getDragAfterElement(column, event.clientY);
+        if (!cardDragged) return; //
 
-        // Если afterElement равен null, вставляем карточку перед кнопкой "Add task"
-        if (afterElement == null) {
-          const addTaskBtn = column.querySelector(".add-task");
-          column.insertBefore(cardDragged, addTaskBtn);
-        } else {
-          // Вставляем карточку перед afterElement
+        const afterElement = this.getDragAfterElement(column, event.clientY);
+        const addTaskBtn = column.querySelector(".add-task"); //
+
+        if (afterElement) {
           column.insertBefore(cardDragged, afterElement);
+        } else {
+          column.insertBefore(cardDragged, addTaskBtn);
         }
       });
 
@@ -44,10 +44,14 @@ export default class Container {
 
         // Создаем новую карточку и вставляем ее перед кнопкой
         const card = new Card(text, column.dataset.columnId);
-        column.insertBefore(
-          card.cardElement,
-          column.querySelector(".add-task"),
-        );
+        const afterElement = this.getDragAfterElement(column, event.clientY); //
+        const addTaskBtn = column.querySelector(".add-task"); //
+
+        if (afterElement) {
+          column.insertBefore(card.cardElement, afterElement);
+        } else {
+          column.insertBefore(card.cardElement, addTaskBtn);
+        }
 
         this.saveCardPosition(card);
       });
@@ -99,15 +103,15 @@ export default class Container {
       ...column.querySelectorAll(".task:not(.dragging)"),
     ];
 
-    draggableElements.reduce((closest, child) => {
+    return draggableElements.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
 
-      if (offset < 0 && (closest === null || offset > closest.offset)) {
-        return { offset: offset, element: child };
+      if (offset < 0 && offset > (closest?.offset || -Infinity)) {
+        return { offset, element: child };
       } else {
         return closest;
       }
-    }, null);
+    }, null)?.element;
   }
 }
